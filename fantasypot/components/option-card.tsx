@@ -30,7 +30,7 @@ export default function Component({ items }: Props) {
         <CardTitle className="text-2xl font-bold text-center text-teal-300">Choose an Option</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">
-        {items.map((item, idx) => (
+        {items && items.map((item, idx) => (
           <Button
             key={item}
             onClick={() => handleOptionClick(item)}

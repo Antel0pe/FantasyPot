@@ -67,7 +67,7 @@ export const POST = async (req: NextRequest) => {
                     content: prompt,
                 },
             ],
-            max_tokens: 800, // Increased token limit to accommodate 400 words
+            max_tokens: 1000, // Increased token limit to accommodate 400 words
             temperature: 0.7, // Adjusted for creativity
             response_format: zodResponseFormat(UserDirectedFantasyStory, "UserDirectedFantasyStory"),
         });

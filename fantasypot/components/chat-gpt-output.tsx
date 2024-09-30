@@ -164,6 +164,13 @@ export function ChatGptOutput() {
                 </CardContent>
               </Card>
               <OptionCard items={fantasyText.options} />
+              <Button
+                onClick={() => {}}
+                disabled={loading}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
+              >
+                { "Continue - Not Working lol"}
+              </Button>
             </>
           )}
         </CardContent>
