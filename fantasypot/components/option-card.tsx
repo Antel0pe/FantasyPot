@@ -3,14 +3,14 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Sparkles, Clock, BarChart, BookOpen, Brain, HelpCircle, Cloud } from "lucide-react"
+import { Sparkles, BookOpen, Cloud } from "lucide-react"
 
 
 
 const icons = [
-  <Cloud className="w-5 h-5" />,
-  <BookOpen className="w-5 h-5" />,
-  <Sparkles className="w-5 h-5" />
+  (key: number) => <Cloud className="w-5 h-5" key={key} />,
+  (key: number) => <BookOpen className="w-5 h-5" key={key} />,
+  (key: number) => <Sparkles className="w-5 h-5" key={key} />
 ]
 
 type Props = {
@@ -40,7 +40,7 @@ export default function Component({ items }: Props) {
                   : "bg-white/10 hover:bg-white/20"
               }`}
           >
-            <div className="mr-4">{icons[Math.floor(Math.random() * icons.length)]}</div>
+            <div className="mr-4">{icons[Math.floor(Math.random() * icons.length)](idx)}</div>
             <div>
               <h3 className="font-semibold">{"Option " + (idx+1)}</h3>
               <p className="text-sm mt-1 opacity-90">{item}</p>

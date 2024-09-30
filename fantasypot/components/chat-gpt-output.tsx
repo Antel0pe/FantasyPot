@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sparkles, Clock, BarChart, BookOpen, Brain, HelpCircle, Cloud, Edit2 } from "lucide-react"
+import { Clock, BarChart, BookOpen, HelpCircle, Cloud, Edit2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import OptionCard from "./option-card"
@@ -56,7 +55,7 @@ export function ChatGptOutput() {
     setLoading(false)
   }
 
-  const handleEdit = (key: keyof UserSpecifications, value: any) => {
+  const handleEdit = (key: keyof UserSpecifications, value: string[] | string) => {
     setUserInputs(prev => ({ ...prev, [key]: value }))
   }
 

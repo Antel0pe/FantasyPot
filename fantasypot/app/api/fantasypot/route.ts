@@ -1,4 +1,3 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { NextRequest, NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
@@ -8,7 +7,7 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_KEY
 });
 
-let generateStoryPrompt = (mythologicalEvents: string, philosopicalQuestions: string, moodType: string) => {
+const generateStoryPrompt = (mythologicalEvents: string, philosopicalQuestions: string, moodType: string) => {
     return `Compose the opening chapter (250-400 words) of a high fantasy novel that captivates from the first line. The narrative should: 
     1. Writing Style: Be written in rich, descriptive prose like J.R.R. Tolkien, capturing the grandeur of the world, with intricate magic systems and dynamic character development akin to Brandon Sanderson.
     2. Historical and Mythological Inspiration: Draw inspiration from a fusion of ${mythologicalEvents}, forging new and unexpected world features, societies, or conflicts.
