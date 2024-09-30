@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OpenAI } from "openai";
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod";
+import openai from "../openai";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_KEY
-});
+
+
+
 
 const generateStoryPrompt = (mythologicalEvents: string, philosopicalQuestions: string, moodType: string) => {
-    return `Compose the opening chapter (250-400 words) of a high fantasy novel that captivates from the first line. The narrative should: 
+    return `Compose the opening chapter of a high fantasy story (250-400 words) that captivates from the first line. The narrative should: 
     1. Writing Style: Be written in rich, descriptive prose like J.R.R. Tolkien, capturing the grandeur of the world, with intricate magic systems and dynamic character development akin to Brandon Sanderson.
     2. Historical and Mythological Inspiration: Draw inspiration from a fusion of ${mythologicalEvents}, forging new and unexpected world features, societies, or conflicts.
     3. Magic System: Feature a unique magic system with clear rules, limitations, and costs that deeply influence society and drive the plot.
@@ -20,7 +20,7 @@ const generateStoryPrompt = (mythologicalEvents: string, philosopicalQuestions: 
     9. Originality: Avoid overused fantasy clichés; strive for originality in characters, plot devices, and world-building elements.
     10. Emotional Impact: Evoke strong emotions—be it awe, tension, empathy, or excitement—to make the narrative impossible to put down.
     11. Prose and Pacing: Use accessible yet evocative prose, balancing description with action and dialogue for engaging pacing that builds tension.
-    12. Make sure to tailor the story to the user. Include 3 options (the user can select one) about where the story can go. The user cannot respond, only select an option.`;
+    12. Make sure to tailor the story to the user. Include 3 options (the user can select one) about where the story can go. The user cannot respond, only select an option. Include the options separetely in the json.`;
 }
 
 // Define the structure of the incoming request body
@@ -28,10 +28,13 @@ const StoryRequestBodySchema = z.object({
     historicalEvents: z.array(z.string()).nonempty(),
     philosophicalQuestions: z.array(z.string()).nonempty(),
     moodType: z.string().min(1),
+    worldLore: z.string(),
+    characterBackground: z.string(),
+    characterArc: z.string(),
 });
 
 // Define the Zod schema for the OpenAI response
-const UserDirectedFantasyStory= z.object({
+const UserDirectedFantasyStory = z.object({
     story: z.string().describe("Generate a story according to the instructions"),
     questions: z.array(z.string()).describe("Propose 3 options for where the story can go."),
 });
@@ -59,7 +62,8 @@ export const POST = async (req: NextRequest) => {
 
         // Call OpenAI's Chat Completion API
         const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            // model: "gpt-4o-mini",
+            model: "gpt-4o-2024-08-06",
             messages: [
                 {
                     role: "system",

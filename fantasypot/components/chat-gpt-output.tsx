@@ -14,14 +14,39 @@ type GeneratedText = {
   options: string[]
 }
 
+type WorldLore = {
+  magicSystem: string
+}
+
+type CharacterBackground = {
+  background: string
+}
+
+type CharacterArc = {
+  arc: string
+}
+
+type StoryText = {
+  chapter: GeneratedText
+}
+
 type UserSpecifications = {
   moodType: string
   philosophicalQuestions: string[]
   historicalEvents: string[]
 }
 
+enum LoadingComponent {
+  WORLD_LORE,
+  CHARACTER_BACKGROUND,
+  CHARACTER_ARC,
+  CH1,
+  NOTHING,
+}
+
+
+
 export function ChatGptOutput() {
-  const [loading, setLoading] = useState(false)
   const [fantasyText, setFantasyText] = useState<GeneratedText>({ text: "", options: [] })
   const [userInputs, setUserInputs] = useState<UserSpecifications>(
     {
@@ -29,14 +54,23 @@ export function ChatGptOutput() {
       philosophicalQuestions: ['free will vs destiny'],
       historicalEvents: ['atlantis sudden disappearance', 'norse ragnorok']
     });
+  const [characterBackground, setCharacterBackground] = useState<CharacterBackground>({ background: "" });
+  const [characterArc, setCharacterArc] = useState<CharacterArc>({ arc: "" });
+  const [worldLore, setWorldLore] = useState<WorldLore>({ magicSystem: "" });
+  const [loading, setLoading] = useState<LoadingComponent>(LoadingComponent.NOTHING);
 
-  const fetchCardData = async () => {
-    const response = await fetch('/api/fantasypot', {
+  const fetchStory = async () => {
+    const response = await fetch('/api/story', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(userInputs),
+      body: JSON.stringify({
+        ...userInputs,
+        characterBackground: characterBackground.background,
+        characterArc: characterArc.arc,
+        worldLore: worldLore.magicSystem,
+      }),
     });
 
     const data = await response.json();
@@ -49,10 +83,68 @@ export function ChatGptOutput() {
     });
   }
 
-  const handleGenerateOutput = async () => {
-    setLoading(true)
-    await fetchCardData()
-    setLoading(false)
+  const fetchWorldLore = async () => {
+    const response = await fetch('/api/lore', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userInputs),
+    });
+
+    const data = await response.json();
+
+    console.log(data)
+
+    setWorldLore({
+      magicSystem: data.lore ?? "Failed to generate lore...",
+    });
+  }
+
+  const fetchCharacterBackground = async () => {
+    const response = await fetch('/api/character/background', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userInputs),
+    });
+
+    const data = await response.json();
+
+    console.log(data)
+
+    setCharacterBackground({
+      background: data.background ?? "Failed to generate background...",
+    });
+  }
+
+  const fetchCharacterArc = async () => {
+    const response = await fetch('/api/character/arc', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        philosophicalQuestions: userInputs.philosophicalQuestions,
+        characterBackground: characterBackground.background,
+        magicSystem: worldLore.magicSystem,
+      }),
+    });
+
+    const data = await response.json();
+
+    console.log(data)
+
+    setCharacterArc({
+      arc: data.arc ?? "Failed to generate story...",
+    });
+  }
+
+  const handleGenerateOutput = async (asyncFunc: () => Promise<void>, loading: LoadingComponent) => {
+    setLoading(loading)
+    await asyncFunc()
+    setLoading(LoadingComponent.NOTHING)
   }
 
   const handleEdit = (key: keyof UserSpecifications, value: string[] | string) => {
@@ -67,11 +159,11 @@ export function ChatGptOutput() {
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
-            onClick={handleGenerateOutput}
-            disabled={loading}
+            onClick={() => handleGenerateOutput(fetchWorldLore, LoadingComponent.WORLD_LORE)}
+            disabled={loading !== LoadingComponent.NOTHING}
             className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
           >
-            {loading ? "Generating..." : "Cook a story"}
+            {loading !== LoadingComponent.NOTHING ? "Generating..." : "Start cooking a story"}
           </Button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -120,34 +212,129 @@ export function ChatGptOutput() {
             />
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(loading || fantasyText.text.length !== 0) && (
-              <EditableCard
-                icon={<BookOpen className="w-5 h-5 text-green-400" />}
-                title="Word Count"
-                value={fantasyText.text.split(" ").length.toString()}
-                onChange={() => { }}
-                loading={loading && fantasyText.text.length === 0}
-              />
-            )}
-            {(loading || fantasyText.text.length !== 0) && (
-              <EditableCard
-                icon={<Clock className="w-5 h-5 text-purple-400" />}
-                title="Reading Time"
-                value={Math.ceil(fantasyText.text.split(" ").length / 200).toString() + " mins"} // Assuming 200 words per minute reading speed
-                onChange={() => { }} // No need to change reading time as it's calculated dynamically
-                loading={loading && fantasyText.text.length === 0}
-              />
-            )}
-          </div>
-
-          {(loading || fantasyText.text.length !== 0) && (
+          
+          {(worldLore.magicSystem.length !== 0) && (
             <>
               <Card className="bg-white/10 border-none">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold flex items-center gap-2 text-teal-300">
                     <BookOpen className="w-5 h-5" />
-                    Text Output
+                    Magic System
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading && worldLore.magicSystem.length === 0 ? (
+                    <Skeleton className="w-full h-[300px] bg-white/10" />
+                  ) : (
+                    <Textarea
+                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
+                      value={worldLore.magicSystem}
+                      onChange={() => { }}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+              <Button
+                onClick={() => handleGenerateOutput(fetchCharacterBackground, LoadingComponent.CHARACTER_BACKGROUND)}
+                disabled={loading !== LoadingComponent.NOTHING}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
+              >
+                { "Generate Character Background"}
+              </Button>
+            </>
+          )}
+
+          {(characterBackground.background.length !== 0) && (
+            <>
+              <Card className="bg-white/10 border-none">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold flex items-center gap-2 text-teal-300">
+                    <BookOpen className="w-5 h-5" />
+                    Character Background
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading && characterBackground.background.length === 0 ? (
+                    <Skeleton className="w-full h-[300px] bg-white/10" />
+                  ) : (
+                    <Textarea
+                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
+                      value={characterBackground.background}
+                      onChange={() => { }}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+              <Button
+                onClick={() => handleGenerateOutput(fetchCharacterArc, LoadingComponent.CHARACTER_ARC)}
+                disabled={loading !== LoadingComponent.NOTHING}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
+              >
+                {"Generate Character Arc"}
+              </Button>
+            </>
+          )}
+
+          {(characterArc.arc.length !== 0) && (
+            <>
+              <Card className="bg-white/10 border-none">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold flex items-center gap-2 text-teal-300">
+                    <BookOpen className="w-5 h-5" />
+                    Character Arc
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading && characterArc.arc.length === 0 ? (
+                    <Skeleton className="w-full h-[300px] bg-white/10" />
+                  ) : (
+                    <Textarea
+                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
+                      value={characterArc.arc}
+                      onChange={() => { }}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+              <Button
+                onClick={() => handleGenerateOutput(fetchStory, LoadingComponent.CH1)}
+                disabled={loading !== LoadingComponent.NOTHING}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
+              >
+                {"Generate Story"}
+              </Button>
+            </>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(loading === LoadingComponent.CH1 || fantasyText.text.length !== 0) && (
+              <EditableCard
+                icon={<BookOpen className="w-5 h-5 text-green-400" />}
+                title="Word Count"
+                value={fantasyText.text.split(" ").length.toString()}
+                onChange={() => { }}
+                loading={loading === LoadingComponent.CH1 && fantasyText.text.length === 0}
+              />
+            )}
+            {(loading === LoadingComponent.CH1 || fantasyText.text.length !== 0) && (
+              <EditableCard
+                icon={<Clock className="w-5 h-5 text-purple-400" />}
+                title="Reading Time"
+                value={Math.ceil(fantasyText.text.split(" ").length / 200).toString() + " mins"} // Assuming 200 words per minute reading speed
+                onChange={() => { }} // No need to change reading time as it's calculated dynamically
+                loading={loading === LoadingComponent.CH1 && fantasyText.text.length === 0}
+              />
+            )}
+          </div>
+
+
+          {(fantasyText.text.length !== 0) && (
+            <>
+              <Card className="bg-white/10 border-none">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold flex items-center gap-2 text-teal-300">
+                    <BookOpen className="w-5 h-5" />
+                    Chapter 1
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -165,7 +352,7 @@ export function ChatGptOutput() {
               <OptionCard items={fantasyText.options} />
               <Button
                 onClick={() => {}}
-                disabled={loading}
+                disabled={loading !== LoadingComponent.NOTHING}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
               >
                 { "Continue - Not Working lol"}
