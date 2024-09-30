@@ -8,92 +8,63 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sparkles, Clock, BarChart, BookOpen, Brain, HelpCircle, Cloud, Edit2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
+import OptionCard from "./option-card"
 
-type CardData = {
-  summary: string
-  sentiment: string
-  wordCount: number
-  readingTime: string
-  keyPoints: string[]
-  potentialQuestions: string[]
-  wordCloud: string[]
-  fullText: string
+type GeneratedText = {
+  text: string
+  options: string[]
+}
+
+type UserSpecifications = {
+  moodType: string
+  philosophicalQuestions: string[]
+  historicalEvents: string[]
 }
 
 export function ChatGptOutput() {
   const [loading, setLoading] = useState(false)
-  const [cardData, setCardData] = useState<Partial<CardData>>({})
-
-  const simulateApiCall = (delay: number) => new Promise(resolve => setTimeout(resolve, delay))
+  const [fantasyText, setFantasyText] = useState<GeneratedText>({ text: "", options: [] })
+  const [userInputs, setUserInputs] = useState<UserSpecifications>(
+    {
+      moodType: 'carefree and lighthearted',
+      philosophicalQuestions: ['free will vs destiny'],
+      historicalEvents: ['atlantis sudden disappearance', 'norse ragnorok']
+    });
 
   const fetchCardData = async () => {
-    const data: CardData = {
-      summary: "",
-      sentiment: "",
-      wordCount: 0,
-      readingTime: "",
-      keyPoints: [],
-      potentialQuestions: [],
-      wordCloud: [],
-      fullText: ""
-    }
+    const response = await fetch('/api/fantasypot', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userInputs),
+    });
 
-    // Simulate fetching data with different delays
-    await simulateApiCall(1000)
-    setCardData(prev => ({ ...prev, summary: "A brief summary of the generated text..." }))
+    const data = await response.json();
 
-    await simulateApiCall(500)
-    setCardData(prev => ({ ...prev, sentiment: "Positive" }))
+    console.log(data)
 
-    await simulateApiCall(800)
-    setCardData(prev => ({ ...prev, wordCount: 500 }))
-
-    await simulateApiCall(300)
-    setCardData(prev => ({ ...prev, readingTime: "2 minutes" }))
-
-    await simulateApiCall(1500)
-    setCardData(prev => ({ ...prev, keyPoints: [
-      "Main idea 1",
-      "Important concept 2",
-      "Critical point 3",
-      "Significant detail 4"
-    ]}))
-
-    await simulateApiCall(1200)
-    setCardData(prev => ({ ...prev, potentialQuestions: [
-      "What are the implications of X?",
-      "How does Y relate to Z?",
-      "Can you elaborate on the concept of A?",
-      "What evidence supports claim B?"
-    ]}))
-
-    await simulateApiCall(700)
-    setCardData(prev => ({ ...prev, wordCloud: [
-      "AI", "Technology", "Innovation", "Ethics", "Future", "Data", "Learning", "Algorithms", "Neural Networks", "Robotics"
-    ]}))
-
-    await simulateApiCall(2000)
-    setCardData(prev => ({ ...prev, fullText: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, vitae aliquam nisl nunc vitae nisl. ".repeat(20) }))
-
-    return data
+    setFantasyText({
+      text: data.story ?? "Failed to generate story...",
+      options: data.questions
+    });
   }
 
   const handleGenerateOutput = async () => {
     setLoading(true)
-    setCardData({})
     await fetchCardData()
     setLoading(false)
   }
 
-  const handleEdit = (key: keyof CardData, value: any) => {
-    setCardData(prev => ({ ...prev, [key]: value }))
+  const handleEdit = (key: keyof UserSpecifications, value: any) => {
+    setUserInputs(prev => ({ ...prev, [key]: value }))
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8 flex flex-col items-center justify-center">
       <Card className="w-full max-w-4xl bg-white/5 backdrop-blur-lg border-none text-slate-100">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center text-teal-300">ChatGPT Output Visualizer</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center text-teal-300">High Fantasy Cookpot</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
@@ -101,82 +72,46 @@ export function ChatGptOutput() {
             disabled={loading}
             className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
           >
-            {loading ? "Generating..." : "Generate ChatGPT Output"}
+            {loading ? "Generating..." : "Cook a story"}
           </Button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(loading || cardData.summary !== undefined) && (
-              <EditableCard
-                icon={<Sparkles className="w-5 h-5 text-yellow-400" />}
-                title="Summary"
-                value={cardData.summary}
-                onChange={(value) => handleEdit("summary", value)}
-                loading={loading && cardData.summary === undefined}
-              />
-            )}
-            {(loading || cardData.sentiment !== undefined) && (
+            {(
               <EditableCard
                 icon={<BarChart className="w-5 h-5 text-blue-400" />}
-                title="Sentiment"
-                value={cardData.sentiment}
-                onChange={(value) => handleEdit("sentiment", value)}
-                loading={loading && cardData.sentiment === undefined}
+                title="Mood Type"
+                value={userInputs.moodType}
+                onChange={(value) => handleEdit("moodType", value)}
+                loading={false}
               />
             )}
-            {(loading || cardData.wordCount !== undefined) && (
-              <EditableCard
-                icon={<BookOpen className="w-5 h-5 text-green-400" />}
-                title="Word Count"
-                value={cardData.wordCount?.toString()}
-                onChange={(value) => handleEdit("wordCount", parseInt(value) || 0)}
-                loading={loading && cardData.wordCount === undefined}
-              />
-            )}
-            {(loading || cardData.readingTime !== undefined) && (
-              <EditableCard
-                icon={<Clock className="w-5 h-5 text-purple-400" />}
-                title="Reading Time"
-                value={cardData.readingTime}
-                onChange={(value) => handleEdit("readingTime", value)}
-                loading={loading && cardData.readingTime === undefined}
+            {(
+              <EditableListCard
+                icon={<HelpCircle className="w-5 h-5" />}
+                title="Philosophical Questions"
+                items={userInputs.philosophicalQuestions}
+                onChange={(value) => handleEdit("philosophicalQuestions", value)}
+                loading={false}
               />
             )}
           </div>
 
-          {(loading || cardData.keyPoints !== undefined) && (
-            <EditableListCard
-              icon={<Brain className="w-5 h-5" />}
-              title="Key Points Considered"
-              items={cardData.keyPoints || []}
-              onChange={(value) => handleEdit("keyPoints", value)}
-              loading={loading && cardData.keyPoints === undefined}
-            />
-          )}
 
-          {(loading || cardData.potentialQuestions !== undefined) && (
-            <EditableListCard
-              icon={<HelpCircle className="w-5 h-5" />}
-              title="Potential Questions"
-              items={cardData.potentialQuestions || []}
-              onChange={(value) => handleEdit("potentialQuestions", value)}
-              loading={loading && cardData.potentialQuestions === undefined}
-            />
-          )}
 
-          {(loading || cardData.wordCloud !== undefined) && (
+          {(
             <EditableListCard
               icon={<Cloud className="w-5 h-5" />}
-              title="Word Cloud"
-              items={cardData.wordCloud || []}
-              onChange={(value) => handleEdit("wordCloud", value)}
-              loading={loading && cardData.wordCloud === undefined}
+              title="Historical/Mythological Events to use as inspiration"
+              items={userInputs.historicalEvents}
+              onChange={(value) => handleEdit("historicalEvents", value)}
+              loading={false}
               renderItems={(items) => (
                 <div className="flex flex-wrap gap-2">
                   {items.map((word, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-white/20 rounded-full text-sm"
-                      style={{ fontSize: `${Math.random() * 0.5 + 0.75}rem`, color: `hsl(${Math.random() * 360}, 70%, 80%)` }}
+                      style={{ color: `hsl(${Math.random() * 360}, 70%, 80%)` }}
                     >
                       {word}
                     </span>
@@ -186,29 +121,54 @@ export function ChatGptOutput() {
             />
           )}
 
-          {(loading || cardData.fullText !== undefined) && (
-            <Card className="bg-white/10 border-none">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold flex items-center gap-2 text-teal-300">
-                  <BookOpen className="w-5 h-5" />
-                  Full Text Output
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading && cardData.fullText === undefined ? (
-                  <Skeleton className="w-full h-[300px] bg-white/10" />
-                ) : (
-                  <Textarea
-                    className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
-                    value={cardData.fullText}
-                    onChange={(e) => handleEdit("fullText", e.target.value)}
-                  />
-                )}
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(loading || fantasyText.text.length !== 0) && (
+              <EditableCard
+                icon={<BookOpen className="w-5 h-5 text-green-400" />}
+                title="Word Count"
+                value={fantasyText.text.split(" ").length.toString()}
+                onChange={() => { }}
+                loading={loading && fantasyText.text.length === 0}
+              />
+            )}
+            {(loading || fantasyText.text.length !== 0) && (
+              <EditableCard
+                icon={<Clock className="w-5 h-5 text-purple-400" />}
+                title="Reading Time"
+                value={Math.ceil(fantasyText.text.length / 200).toString() + " mins)"} // Assuming 200 words per minute reading speed
+                onChange={() => { }} // No need to change reading time as it's calculated dynamically
+                loading={loading && fantasyText.text.length === 0}
+              />
+            )}
+          </div>
+
+          {(loading || fantasyText.text.length !== 0) && (
+            <>
+              <Card className="bg-white/10 border-none">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold flex items-center gap-2 text-teal-300">
+                    <BookOpen className="w-5 h-5" />
+                    Text Output
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading && fantasyText.text.length === 0 ? (
+                    <Skeleton className="w-full h-[300px] bg-white/10" />
+                  ) : (
+                    <Textarea
+                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
+                      value={fantasyText.text}
+                      onChange={() => { }}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+              <OptionCard items={fantasyText.options} />
+            </>
           )}
         </CardContent>
       </Card>
+
     </div>
   )
 }
@@ -230,9 +190,9 @@ function EditableCard({ icon, title, value, onChange, loading }: {
           {title}
         </CardTitle>
         {!loading && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsEditing(!isEditing)}
             className="hover:bg-teal-500/20"
           >
@@ -290,9 +250,9 @@ function EditableListCard({ icon, title, items, onChange, loading, renderItems }
           {title}
         </CardTitle>
         {!loading && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsEditing(!isEditing)}
             className="hover:bg-teal-500/20"
           >
@@ -312,9 +272,9 @@ function EditableListCard({ icon, title, items, onChange, loading, renderItems }
                   onChange={(e) => handleItemChange(index, e.target.value)}
                   className="bg-transparent border-slate-700 text-slate-100"
                 />
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleRemoveItem(index)}
                   className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
                 >
@@ -322,9 +282,9 @@ function EditableListCard({ icon, title, items, onChange, loading, renderItems }
                 </Button>
               </div>
             ))}
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleAddItem}
               className="text-teal-300 border-teal-300 hover:bg-teal-500/20"
             >
