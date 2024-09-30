@@ -134,7 +134,7 @@ export function ChatGptOutput() {
               <EditableCard
                 icon={<Clock className="w-5 h-5 text-purple-400" />}
                 title="Reading Time"
-                value={Math.ceil(fantasyText.text.length / 200).toString() + " mins)"} // Assuming 200 words per minute reading speed
+                value={Math.ceil(fantasyText.text.split(" ").length / 200).toString() + " mins"} // Assuming 200 words per minute reading speed
                 onChange={() => { }} // No need to change reading time as it's calculated dynamically
                 loading={loading && fantasyText.text.length === 0}
               />
