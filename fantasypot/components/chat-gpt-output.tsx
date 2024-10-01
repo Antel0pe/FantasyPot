@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import OptionCard from "./option-card"
 import MarkdownDisplay from "./MarkdownDisplay"
 import { preprocessMarkdown } from "@/utils/markdownPreprocessor"
+import { number } from "zod"
 
 type GeneratedText = {
   text: string
@@ -63,7 +64,7 @@ export function ChatGptOutput() {
   const [loading, setLoading] = useState<LoadingComponent>(LoadingComponent.NOTHING);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-  const fetchStory = async () => {
+  const fetchStory = async (selectedChapter: number) => {
     const response = await fetch('/api/story', {
       method: 'POST',
       headers: {
@@ -74,27 +75,42 @@ export function ChatGptOutput() {
         characterBackground: characterBackground.background,
         characterArc: characterArc.arc,
         worldLore: worldLore.magicSystem,
-        previousChapters: fantasyText.text,
+        previousChapters: generatedStory.chapters.slice(0, selectedChapter).map((text) => text.text),
         userPickedOption: selectedOption ?? ''
       }),
     });
 
+    console.log('sending req with')
+    console.log(generatedStory.chapters.slice(0, selectedChapter).map((text) => text.text).length)
+    console.log(selectedOption ?? '')
+
     const data = await response.json();
 
-    console.log(data)
+    if (data.story){
+      // setFantasyText({
+      //   text: (data.story) ?? "Failed to generate story...",
+      //   options: data.questions
+      // });
+  
+      setGeneratedStory(prevState => ({
+        ...prevState,
+        chapters: [...prevState.chapters.slice(0, selectedChapter), {
+          text: data.story ?? "Failed to generate story...",
+          options: data.questions
+        }, ...prevState.chapters.slice(selectedChapter+1)]
+      }))
+    } else {
+      setGeneratedStory(prevState => ({
+        ...prevState,
+        chapters: [...prevState.chapters.slice(0, selectedChapter), {
+          text: "Failed to generate story...",
+          options: ["Failed to generate options..."]
+        }, ...prevState.chapters.slice(selectedChapter+1)]
+      }))
+    }
 
-    setFantasyText({
-      text: (data.story) ?? "Failed to generate story...",
-      options: data.questions
-    });
+    
 
-    setGeneratedStory(prevState => ({
-      ...prevState,
-      chapters: [...prevState.chapters, {
-        text: data.story ?? "Failed to generate story...",
-        options: data.questions
-      }]
-    }))
   }
 
   const fetchWorldLore = async () => {
@@ -157,10 +173,18 @@ export function ChatGptOutput() {
 
   
 
-  const handleGenerateOutput = async (asyncFunc: () => Promise<void>, loading: LoadingComponent) => {
-    setLoading(loading)
-    await asyncFunc()
-    setLoading(LoadingComponent.NOTHING)
+  // non story related text updates
+  const handleGenerateNonStoryOutput = async (asyncFunc: () => Promise<void>, loading: LoadingComponent) => {
+    setLoading(loading);
+    await asyncFunc();
+    setLoading(LoadingComponent.NOTHING);
+  }
+
+  // story text specific updates
+  const handleGenerateStoryOutput = async (asyncFunc: (number: number) => Promise<void>, number: number) => {
+    setLoading(LoadingComponent.STORY);
+    await asyncFunc(number);
+    setLoading(LoadingComponent.NOTHING);
   }
 
   const handleEdit = (key: keyof UserSpecifications, value: string[] | string) => {
@@ -175,7 +199,7 @@ export function ChatGptOutput() {
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
-            onClick={() => handleGenerateOutput(fetchWorldLore, LoadingComponent.WORLD_LORE)}
+            onClick={() => handleGenerateNonStoryOutput(fetchWorldLore, LoadingComponent.WORLD_LORE)}
             disabled={loading !== LoadingComponent.NOTHING}
             className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
           >
@@ -253,7 +277,7 @@ export function ChatGptOutput() {
                 </CardContent>
               </Card>
               <Button
-                onClick={() => handleGenerateOutput(fetchCharacterBackground, LoadingComponent.CHARACTER_BACKGROUND)}
+                onClick={() => handleGenerateNonStoryOutput(fetchCharacterBackground, LoadingComponent.CHARACTER_BACKGROUND)}
                 disabled={loading !== LoadingComponent.NOTHING}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
               >
@@ -285,7 +309,7 @@ export function ChatGptOutput() {
                 </CardContent>
               </Card>
               <Button
-                onClick={() => handleGenerateOutput(fetchCharacterArc, LoadingComponent.CHARACTER_ARC)}
+                onClick={() => handleGenerateNonStoryOutput(fetchCharacterArc, LoadingComponent.CHARACTER_ARC)}
                 disabled={loading !== LoadingComponent.NOTHING}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
               >
@@ -317,11 +341,11 @@ export function ChatGptOutput() {
                 </CardContent>
               </Card>
               <Button
-                onClick={() => handleGenerateOutput(fetchStory, LoadingComponent.STORY)}
+                onClick={() => handleGenerateStoryOutput(fetchStory, 0)} // bug - what if user clicks this button more than once? 
                 disabled={loading !== LoadingComponent.NOTHING}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
               >
-                {"Generate Story"}
+                {"Generate Chapter 1"}
               </Button>
             </>
           )}
@@ -347,8 +371,42 @@ export function ChatGptOutput() {
             )}
           </div>
 
+          {generatedStory.chapters.map((chapter, idx) => (
+            loading === LoadingComponent.STORY || chapter.text.length !== 0 ? (
+              <>
+                <Card className="bg-white/10 border-none">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-semibold flex items-center gap-2 text-teal-300">
+                      <BookOpen className="w-5 h-5" />
+                      Chapter {idx + 1}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loading && chapter.text.length === 0 ? (
+                      <Skeleton className="w-full h-[300px] bg-white/10" />
+                    ) : (
+                      <div className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                        <div className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300 overflow-auto mb-1rem">
+                          <MarkdownDisplay markdown={chapter.text} />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                <OptionCard items={chapter.options} selectedOption={selectedOption} setSelectedOption={setSelectedOption} />
+                <Button
+                  onClick={() => handleGenerateStoryOutput(fetchStory, idx + 1)}
+                  disabled={ loading !== LoadingComponent.NOTHING || !isOptionForClickedChapterSelected(chapter, selectedOption) || !isValidOptionList(chapter)}
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
+                >
+                  Continue to Chapter {idx + 2}
+                </Button>
+              </>
+            ) : null
+          ))}
 
-          {(loading === LoadingComponent.STORY || fantasyText.text.length !== 0) && (
+
+          {/* {(loading === LoadingComponent.STORY || fantasyText.text.length !== 0) && (
             <>
               <Card className="bg-white/10 border-none">
                 <CardHeader>
@@ -372,19 +430,28 @@ export function ChatGptOutput() {
               </Card>
               <OptionCard items={fantasyText.options} selectedOption={selectedOption} setSelectedOption={setSelectedOption} />
               <Button
-                onClick={() => handleGenerateOutput(fetchStory, LoadingComponent.STORY)}
-                disabled={loading !== LoadingComponent.NOTHING}
+                onClick={() => handleGenerateStoryOutput(fetchStory, 1)}
+                disabled={loading !== LoadingComponent.NOTHING || !isOptionForClickedChapterSelected(generatedStory, 0, selectedOption)}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
               >
                 { "Continue - Not Working lol"}
               </Button>
             </>
-          )}
+          )} */}
         </CardContent>
       </Card>
 
     </div>
   )
+}
+
+function isValidOptionList(chapter: GeneratedText){
+  return !chapter.options.includes('Failed to generate options...');
+}
+
+function isOptionForClickedChapterSelected(chapter: GeneratedText, selectedOption: string | null){
+  return selectedOption !== null && chapter.options !== null
+  && chapter.options.includes(selectedOption);
 }
 
 function EditableCard({ icon, title, value, onChange, loading }: {

@@ -37,13 +37,13 @@ const StoryRequestBodySchema = z.object({
     worldLore: z.string(),
     characterBackground: z.string(),
     characterArc: z.string(),
-    previousChapters: z.string().optional(),
+    previousChapters: z.array(z.string()).optional(),
     userPickedOption: z.string().optional(),
 });
 
 // Define the Zod schema for the OpenAI response
 const UserDirectedFantasyStory = z.object({
-    story: z.string().describe("Generate a story according to the instructions"),
+    story: z.string().describe("Generate a MAX 400 word story according to the instructions"),
     questions: z.array(z.string()).describe("Propose 3 options for where the story can go."),
 });
 
@@ -69,7 +69,7 @@ export const POST = async (req: NextRequest) => {
             worldLore,
             characterBackground,
             characterArc,
-            previousChapters ?? "",
+            previousChapters?.join('\n') ?? "",
             userPickedOption ?? ""
         );
 
@@ -97,10 +97,21 @@ export const POST = async (req: NextRequest) => {
             );
         }
 
-        // Parse and validate the OpenAI response using Zod
-        const parsedAIResponse = UserDirectedFantasyStory.safeParse(JSON.parse(aiResponse));
+        console.log(aiResponse)
 
-        if (!parsedAIResponse.data) {
+        // Parse and validate the OpenAI response using Zod
+        let parsedAiResponse;
+        try {
+            parsedAiResponse = JSON.parse(aiResponse);
+        } catch (error) {
+            if (error instanceof SyntaxError && error.message.includes("Unterminated string in JSON")) {
+                const correctedAiResponse = aiResponse + '"]}';
+                parsedAiResponse = JSON.parse(correctedAiResponse);
+            }
+        }
+        const parsedStoryResponse = UserDirectedFantasyStory.safeParse(parsedAiResponse);
+
+        if (!parsedStoryResponse.data) {
             console.log("did not return response according to zod");
 
             return NextResponse.json(
@@ -108,7 +119,7 @@ export const POST = async (req: NextRequest) => {
                 { status: 500 }
             );
         } else {
-            const { story, questions } = parsedAIResponse.data;
+            const { story, questions } = parsedStoryResponse.data;
             // Return the structured response
             return NextResponse.json({ story, questions });
         }
