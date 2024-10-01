@@ -15,7 +15,6 @@ export const preprocessMarkdown = (markdown: string): string => {
       return line;
     });
     
-    console.log(processedLines.join('\n'))
     return processedLines.join(`\n`);
   };
   

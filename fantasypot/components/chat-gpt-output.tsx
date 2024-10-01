@@ -29,7 +29,7 @@ type CharacterArc = {
 }
 
 type StoryText = {
-  chapter: GeneratedText
+  chapters: GeneratedText[]
 }
 
 type UserSpecifications = {
@@ -42,13 +42,14 @@ enum LoadingComponent {
   WORLD_LORE,
   CHARACTER_BACKGROUND,
   CHARACTER_ARC,
-  CH1,
+  STORY,
   NOTHING,
 }
 
 
 
 export function ChatGptOutput() {
+  const [generatedStory, setGeneratedStory] = useState<StoryText>({ chapters: [] });
   const [fantasyText, setFantasyText] = useState<GeneratedText>({ text: "", options: [] })
   const [userInputs, setUserInputs] = useState<UserSpecifications>(
     {
@@ -60,6 +61,7 @@ export function ChatGptOutput() {
   const [characterArc, setCharacterArc] = useState<CharacterArc>({ arc: "" });
   const [worldLore, setWorldLore] = useState<WorldLore>({ magicSystem: "" });
   const [loading, setLoading] = useState<LoadingComponent>(LoadingComponent.NOTHING);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   const fetchStory = async () => {
     const response = await fetch('/api/story', {
@@ -72,6 +74,8 @@ export function ChatGptOutput() {
         characterBackground: characterBackground.background,
         characterArc: characterArc.arc,
         worldLore: worldLore.magicSystem,
+        previousChapters: fantasyText.text,
+        userPickedOption: selectedOption ?? ''
       }),
     });
 
@@ -83,6 +87,14 @@ export function ChatGptOutput() {
       text: (data.story) ?? "Failed to generate story...",
       options: data.questions
     });
+
+    setGeneratedStory(prevState => ({
+      ...prevState,
+      chapters: [...prevState.chapters, {
+        text: data.story ?? "Failed to generate story...",
+        options: data.questions
+      }]
+    }))
   }
 
   const fetchWorldLore = async () => {
@@ -305,7 +317,7 @@ export function ChatGptOutput() {
                 </CardContent>
               </Card>
               <Button
-                onClick={() => handleGenerateOutput(fetchStory, LoadingComponent.CH1)}
+                onClick={() => handleGenerateOutput(fetchStory, LoadingComponent.STORY)}
                 disabled={loading !== LoadingComponent.NOTHING}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
               >
@@ -315,28 +327,28 @@ export function ChatGptOutput() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(loading === LoadingComponent.CH1 || fantasyText.text.length !== 0) && (
+            {(loading === LoadingComponent.STORY || fantasyText.text.length !== 0) && (
               <EditableCard
                 icon={<BookOpen className="w-5 h-5 text-green-400" />}
                 title="Word Count"
                 value={fantasyText.text.split(" ").length.toString()}
                 onChange={() => { }}
-                loading={loading === LoadingComponent.CH1 && fantasyText.text.length === 0}
+                loading={loading === LoadingComponent.STORY && fantasyText.text.length === 0}
               />
             )}
-            {(loading === LoadingComponent.CH1 || fantasyText.text.length !== 0) && (
+            {(loading === LoadingComponent.STORY || fantasyText.text.length !== 0) && (
               <EditableCard
                 icon={<Clock className="w-5 h-5 text-purple-400" />}
                 title="Reading Time"
                 value={Math.ceil(fantasyText.text.split(" ").length / 200).toString() + " mins"} // Assuming 200 words per minute reading speed
                 onChange={() => { }} // No need to change reading time as it's calculated dynamically
-                loading={loading === LoadingComponent.CH1 && fantasyText.text.length === 0}
+                loading={loading === LoadingComponent.STORY && fantasyText.text.length === 0}
               />
             )}
           </div>
 
 
-          {(loading === LoadingComponent.CH1 || fantasyText.text.length !== 0) && (
+          {(loading === LoadingComponent.STORY || fantasyText.text.length !== 0) && (
             <>
               <Card className="bg-white/10 border-none">
                 <CardHeader>
@@ -358,9 +370,9 @@ export function ChatGptOutput() {
                   )}
                 </CardContent>
               </Card>
-              <OptionCard items={fantasyText.options} />
+              <OptionCard items={fantasyText.options} selectedOption={selectedOption} setSelectedOption={setSelectedOption} />
               <Button
-                onClick={() => {}}
+                onClick={() => handleGenerateOutput(fetchStory, LoadingComponent.STORY)}
                 disabled={loading !== LoadingComponent.NOTHING}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
               >

@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sparkles, BookOpen, Cloud } from "lucide-react"
 
-
+type Props = {
+    items: string[],
+    selectedOption: string | null,
+    setSelectedOption: (value: string | null) => void,
+}
 
 const icons = [
   (key: number) => <Cloud className="w-5 h-5" key={key} />,
@@ -13,13 +17,7 @@ const icons = [
   (key: number) => <Sparkles className="w-5 h-5" key={key} />
 ]
 
-type Props = {
-    items: string[]
-}
-
-export default function Component({ items }: Props) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null)
-
+export default function Component({ items, selectedOption, setSelectedOption }: Props) {
   const handleOptionClick = (value: string) => {
     setSelectedOption(value === selectedOption ? null : value)
   }
