@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod";
-import openai from "../openai";
-
-
-
-
+import * as config from "../openai";
 
 const generateStoryPrompt = (mythologicalEvents: string, philosopicalQuestions: string, moodType: string) => {
     return `Compose the opening chapter of a high fantasy story (250-400 words) that captivates from the first line. The narrative should: 
@@ -61,9 +57,8 @@ export const POST = async (req: NextRequest) => {
         );
 
         // Call OpenAI's Chat Completion API
-        const response = await openai.chat.completions.create({
-            // model: "gpt-4o-mini",
-            model: "gpt-4o-2024-08-06",
+        const response = await config.openai.chat.completions.create({
+            model: config.openaiModel,
             messages: [
                 {
                     role: "system",

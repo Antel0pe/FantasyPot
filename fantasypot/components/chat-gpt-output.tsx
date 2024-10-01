@@ -8,6 +8,8 @@ import { Clock, BarChart, BookOpen, HelpCircle, Cloud, Edit2 } from "lucide-reac
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import OptionCard from "./option-card"
+import MarkdownDisplay from "./MarkdownDisplay"
+import { preprocessMarkdown } from "@/utils/markdownPreprocessor"
 
 type GeneratedText = {
   text: string
@@ -78,7 +80,7 @@ export function ChatGptOutput() {
     console.log(data)
 
     setFantasyText({
-      text: data.story ?? "Failed to generate story...",
+      text: (data.story) ?? "Failed to generate story...",
       options: data.questions
     });
   }
@@ -97,7 +99,7 @@ export function ChatGptOutput() {
     console.log(data)
 
     setWorldLore({
-      magicSystem: data.lore ?? "Failed to generate lore...",
+      magicSystem: (data.lore) ?? "Failed to generate lore...",
     });
   }
 
@@ -115,7 +117,7 @@ export function ChatGptOutput() {
     console.log(data)
 
     setCharacterBackground({
-      background: data.background ?? "Failed to generate background...",
+      background: (data.background) ?? "Failed to generate background...",
     });
   }
 
@@ -137,9 +139,11 @@ export function ChatGptOutput() {
     console.log(data)
 
     setCharacterArc({
-      arc: data.arc ?? "Failed to generate story...",
+      arc: (data.arc) ?? "Failed to generate story...",
     });
   }
+
+  
 
   const handleGenerateOutput = async (asyncFunc: () => Promise<void>, loading: LoadingComponent) => {
     setLoading(loading)
@@ -226,12 +230,14 @@ export function ChatGptOutput() {
                   {loading && worldLore.magicSystem.length === 0 ? (
                     <Skeleton className="w-full h-[300px] bg-white/10" />
                   ) : (
-                    <Textarea
-                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
-                      value={worldLore.magicSystem}
-                      onChange={() => { }}
-                    />
+                      <div className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+
+                        <div className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300 overflow-auto mb-1rem">
+                          <MarkdownDisplay markdown={worldLore.magicSystem} />
+                        </div>
+                      </div>
                   )}
+                  
                 </CardContent>
               </Card>
               <Button
@@ -257,11 +263,12 @@ export function ChatGptOutput() {
                   {loading && characterBackground.background.length === 0 ? (
                     <Skeleton className="w-full h-[300px] bg-white/10" />
                   ) : (
-                    <Textarea
-                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
-                      value={characterBackground.background}
-                      onChange={() => { }}
-                    />
+                    <div className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+
+                        <div className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300 overflow-auto mb-1rem">
+                          <MarkdownDisplay markdown={characterBackground.background} />
+                        </div>
+                      </div>
                   )}
                 </CardContent>
               </Card>
@@ -288,11 +295,12 @@ export function ChatGptOutput() {
                   {loading && characterArc.arc.length === 0 ? (
                     <Skeleton className="w-full h-[300px] bg-white/10" />
                   ) : (
-                    <Textarea
-                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
-                      value={characterArc.arc}
-                      onChange={() => { }}
-                    />
+                    <div className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+
+                        <div className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300 overflow-auto mb-1rem">
+                          <MarkdownDisplay markdown={characterArc.arc} />
+                        </div>
+                      </div>
                   )}
                 </CardContent>
               </Card>
@@ -328,7 +336,7 @@ export function ChatGptOutput() {
           </div>
 
 
-          {(fantasyText.text.length !== 0) && (
+          {(loading === LoadingComponent.CH1 || fantasyText.text.length !== 0) && (
             <>
               <Card className="bg-white/10 border-none">
                 <CardHeader>
@@ -341,11 +349,12 @@ export function ChatGptOutput() {
                   {loading && fantasyText.text.length === 0 ? (
                     <Skeleton className="w-full h-[300px] bg-white/10" />
                   ) : (
-                    <Textarea
-                      className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300"
-                      value={fantasyText.text}
-                      onChange={() => { }}
-                    />
+                    <div className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+
+                        <div className="h-[300px] w-full rounded-md border border-slate-700 bg-transparent p-4 text-sm leading-relaxed text-slate-300 overflow-auto mb-1rem">
+                          <MarkdownDisplay markdown={fantasyText.text} />
+                        </div>
+                      </div>
                   )}
                 </CardContent>
               </Card>

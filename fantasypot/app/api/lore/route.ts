@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod";
-import openai from "../openai";
+import * as config from "../openai";
 
 
 const generateLoreSystemPrompt = (mythologicalEvents: string, philosopicalQuestions: string) =>{
@@ -41,9 +41,9 @@ export const POST = async (req: NextRequest) => {
         );
 
         // Call OpenAI's Chat Completion API
-        const response = await openai.chat.completions.create({
+        const response = await config.openai.chat.completions.create({
             // model: "gpt-4o-mini",
-            model: "gpt-4o-2024-08-06",
+            model: config.openaiModel,
             messages: [
                 {
                     role: "system",

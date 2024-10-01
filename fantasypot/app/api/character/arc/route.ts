@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod";
-import openai from "../../openai";
-import { arch } from "os";
+import * as config from "../../openai";
 
 const characterArcPrompt = (philosopicalQuestions: string, characterBackground: string, magicSystem: string) =>{
     return `Follow Brandon Sanderson's writing tips to summarize the character's personal growth arc. Highlight key turning points that reflect the
@@ -43,9 +42,8 @@ export const POST = async (req: NextRequest) => {
         );
 
         // Call OpenAI's Chat Completion API
-        const response = await openai.chat.completions.create({
-            // model: "gpt-4o-mini",
-            model: "gpt-4o-2024-08-06",
+        const response = await config.openai.chat.completions.create({
+            model: config.openaiModel,
             messages: [
                 {
                     role: "system",
