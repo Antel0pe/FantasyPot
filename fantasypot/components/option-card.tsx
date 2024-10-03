@@ -39,7 +39,7 @@ export default function Component({ items, selectedOption, setSelectedOption }: 
               }`}
           >
             <div className="mr-4">{icons[Math.floor(Math.random() * icons.length)](idx)}</div>
-            <div>
+            <div className="text-wrap">
               <h3 className="font-semibold">{"Option " + (idx+1)}</h3>
               <p className="text-sm mt-1 opacity-90">{item}</p>
             </div>
