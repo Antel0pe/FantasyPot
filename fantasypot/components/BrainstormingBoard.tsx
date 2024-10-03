@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { motion } from "framer-motion"
 import { UserSpecifications, WorldLore, CharacterBackground, CharacterArc } from "./StoryTypes"
 import { ChatWindow } from './ChatWindow'
 
-type BrainstormingNote = {
+export type BrainstormingNote = {
   id: string
   title: string
   content: string
@@ -12,26 +12,11 @@ type BrainstormingNote = {
 }
 
 type BrainstormingBoardProps = {
-  userInputs: UserSpecifications
-  worldLore: WorldLore
-  characterBackground: CharacterBackground
-  characterArc: CharacterArc
 }
 
-const generateBrainstormingNotes = (props: BrainstormingBoardProps): BrainstormingNote[] => {
-  const notes: BrainstormingNote[] = [
-    { id: '1', title: 'Mood', content: props.userInputs.moodType, color: 'bg-yellow-200' },
-    { id: '2', title: 'Philosophical Questions', content: props.userInputs.philosophicalQuestions.join(', '), color: 'bg-green-200' },
-    { id: '3', title: 'Historical Events', content: props.userInputs.historicalEvents.join(', '), color: 'bg-blue-200' },
-    { id: '4', title: 'Magic System', content: props.worldLore.magicSystem, color: 'bg-purple-200' },
-    { id: '5', title: 'Character Background', content: props.characterBackground.background, color: 'bg-pink-200' },
-    { id: '6', title: 'Character Arc', content: props.characterArc.arc, color: 'bg-orange-200' },
-  ]
-  return notes
-}
 
 export function BrainstormingBoard(props: BrainstormingBoardProps) {
-  const notes = generateBrainstormingNotes(props);
+  const [notes, setNotes] = useState<BrainstormingNote[]>([]);
   const colors = ['bg-yellow-200', 'bg-green-200', 'bg-blue-200', 'bg-purple-200', 'bg-pink-200', 'bg-orange-200']
 
   return (
@@ -54,7 +39,7 @@ export function BrainstormingBoard(props: BrainstormingBoardProps) {
         </motion.div>
       ))}
 
-      <ChatWindow />
+      <ChatWindow setBrainstormNotes={setNotes} />
     </div>
   )
 }

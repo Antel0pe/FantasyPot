@@ -22,11 +22,11 @@ export function ChatGptOutput() {
   const [characterBackground, setCharacterBackground] = useState<CharacterBackground>({ background: "" });
   const [characterArc, setCharacterArc] = useState<CharacterArc>({ arc: "" });
   const [worldLore, setWorldLore] = useState<WorldLore>({ magicSystem: "" });
-  
+
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("process");
 
-  
+
 
 
 
@@ -51,36 +51,32 @@ export function ChatGptOutput() {
           </TabsTrigger>
         </TabsList>
         <div className="flex-grow overflow-auto p-6">
-        <TabsContent value="process" className="mt-4">
-        <Card className="bg-white/5 backdrop-blur-lg border-none text-slate-100 max-w-4xl mx-auto">
-                       <CardContent className="p-6">
-              <CreativeProcessContent
-                userInputs={userInputs}
-                handleEdit={handleEdit}
-                worldLore={worldLore}
-                characterBackground={characterBackground}
-                characterArc={characterArc}
-                generatedStory={generatedStory}
-                selectedOption={selectedOption}
-                setSelectedOption={setSelectedOption}
-                setGeneratedStory={setGeneratedStory}
-              setWorldLore={setWorldLore}
-              setCharacterBackground={setCharacterBackground}
-              setCharacterArc={setCharacterArc}
-              />
-            </CardContent>
+          <TabsContent value="process" className="mt-4">
+            <Card className="bg-white/5 backdrop-blur-lg border-none text-slate-100 max-w-4xl mx-auto">
+              <CardContent className="p-6">
+                <CreativeProcessContent
+                  userInputs={userInputs}
+                  handleEdit={handleEdit}
+                  worldLore={worldLore}
+                  characterBackground={characterBackground}
+                  characterArc={characterArc}
+                  generatedStory={generatedStory}
+                  selectedOption={selectedOption}
+                  setSelectedOption={setSelectedOption}
+                  setGeneratedStory={setGeneratedStory}
+                  setWorldLore={setWorldLore}
+                  setCharacterBackground={setCharacterBackground}
+                  setCharacterArc={setCharacterArc}
+                />
+              </CardContent>
             </Card>
-            </TabsContent>
-            <TabsContent value="outline" className="mt-4">
-              <BrainstormingBoard
-              userInputs={userInputs}
-              worldLore={worldLore}
-              characterBackground={characterBackground}
-              characterArc={characterArc}
-              />
-            </TabsContent>
-      </div>
+          </TabsContent>
+          <TabsContent value="outline" className="mt-4">
+            <BrainstormingBoard />
+          </TabsContent>
+        </div>
       </Tabs>
-      </div>
-      
-)}
+    </div>
+
+  )
+}
