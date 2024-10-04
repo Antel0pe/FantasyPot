@@ -54,10 +54,10 @@ type WriterResponse = {
 
 
 type Props = {
-    setBrainstormNotes: Dispatch<SetStateAction<BrainstormingNote[]>>
+    addNote: (title: string, text: string) => void
 }
 
-export function ChatWindow({ setBrainstormNotes }: Props) {
+export function ChatWindow({ addNote }: Props) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
 
@@ -104,15 +104,9 @@ export function ChatWindow({ setBrainstormNotes }: Props) {
     const handleStickyNote = (stickyNote: [{ title: string, category: string, text: string }]) => {
         // Check if the response is a sticky note
         if (stickyNote) {
-            const parsedStickyNotes = stickyNote.map(note => {
-                return {
-                    id: uuidv4(),
-                    title: note.title,
-                    content: note.text,
-                    color: 'bg-blue-200', // Default color for sticky notes
-                };
+            stickyNote.forEach(note => {
+                addNote(note.title, note.text);
             });
-            setBrainstormNotes(prevNotes => [...prevNotes, ...parsedStickyNotes]);
         }
     };
 
@@ -251,7 +245,7 @@ export function ChatWindow({ setBrainstormNotes }: Props) {
                         onClick={startBrainstorm}
                         className="bg-green-500 hover:bg-gray-600 flex-1"
                     >
-                        Start Conversation
+                        { messages.length === 0 ? 'Start Conversation' : 'Continue' }
                     </Button>
                 {/* </div> */}
             </CardFooter>

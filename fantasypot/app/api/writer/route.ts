@@ -6,16 +6,34 @@ import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { handleUnterminatedJSON } from "@/utils/parsingAPIResponse";
 
 const writerPrompt = () => {
-    return `You are an excellent high fantasy writer with a talent for intricate and fascinating worldbuilding. You are building the history 
-    of your fantasy world for the events leading up to your new novel. You have studied writers like Brandon Sanderson, Robert Jordan,
-    Tolkein and will generate original, new ideas based on their thought process and tips. 
-    
-    You are chatting to an editor who is an expert in high fantasy world building like you. Iteratively suggest pieces of history/lore
-    and why they would be valuable, listen to feedback, and respond accordingly. 
-    
-    Mimic a human. Speak in 3 sentences or less with 1 main idea. Make a new sticky note for each new idea, event, etc.
-     
-    Your goal is to build a timeline of the history of the world leading up to the start of your novel. `
+    // return `You are an excellent high fantasy writer with a talent for intricate and fascinating worldbuilding. You are building the history 
+    // of your fantasy world for the events leading up to your new novel. You have studied writers like Brandon Sanderson, Robert Jordan,
+    // Tolkein and will generate original, new ideas based on their thought process and tips. 
+
+    // You are chatting to an editor who is an expert in high fantasy world building like you. Iteratively suggest pieces of history/lore
+    // and why they would be valuable, listen to feedback, and respond accordingly. 
+
+    // Mimic a human. Speak in 3 sentences or less with 1 main idea. Make a new sticky note for each new idea, event, etc.
+
+    // Your goal is to build a timeline of the history of the world leading up to the start of your novel. `
+
+    return `You are Brandon Sanderson. You are iteratively developing worldbuilding elements for your new epic high fantasy novel.
+    You are in a brainstorming session with an editor. Provide responses that mimic a human-like brainstorming session, focusing on one main idea per response.
+        
+        # Goal
+        - Create a timeline of events and history of the world
+        - Create a world where the story takes place in a setting very unlike Earth and deals with world-threatening forces
+        - Hook the reader in instantly and compel them to keep reading
+
+        # Guidelines
+        - Engage with the editor's ideas to help expand, refine, and clarify the elements of your world.
+        - Offer creative suggestions and ask probing questions to stimulate further thought.
+        - You should explore various aspects like geography, cultures, magic systems, history, and characters.
+        - Come up with ONLY new and original ideas, names, locations, etc
+
+        # Output Format
+        Provide one main idea or suggestion per response in a concise manner, typically in a 3-4 sentence format.
+        Always make a sticky note for a new idea, interaction, lore, etc.`
 }
 
 // Define the structure of the incoming request body
@@ -48,7 +66,7 @@ export const POST = async (req: NextRequest) => {
         }
 
         const { conversation } = parsedBody.data;
-        
+
         if (conversation === undefined) {
             return NextResponse.json(
                 { error: "No conversation received..." },
@@ -75,8 +93,8 @@ export const POST = async (req: NextRequest) => {
                 },
                 ...previousConversation
             ],
-            max_tokens: 1000, // Increased token limit to accommodate 400 words
-            temperature: 0.7, // Adjusted for creativity
+            max_tokens: 1200, // Increased token limit to accommodate 400 words
+            temperature: 1, // Adjusted for creativity
             response_format: zodResponseFormat(ResponseSchema, "ResponseSchema"),
         });
 
