@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { motion } from "framer-motion"
 import { ChatWindow } from './ChatWindow'
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Trash, RefreshCw, Save } from "lucide-react" // Imported additional icons
 import { useToast } from "@/hooks/use-toast"
 import { v4 as uuidv4 } from 'uuid' // Ensure you install uuid: npm install uuid
 
@@ -42,7 +42,7 @@ export function BrainstormingBoard(props: BrainstormingBoardProps) {
     return () => window.removeEventListener('resize', updateBoardSize)
   }, [])
 
-  const addNote = (title: string, text: string) => {
+  const addNote = (title: string = 'New Note', text: string = 'Your content here') => {
     setNotes(prevNotes => {
       const newNote: BrainstormingNote = {
         id: uuidv4(),
@@ -55,6 +55,7 @@ export function BrainstormingBoard(props: BrainstormingBoardProps) {
         rotation: (Math.floor(Math.random() * 3) - 1) * 5 // Rotations: -5°, 0°, +5°
       }
       setZCounter(prev => prev + 1)
+      console.log(prevNotes, newNote)
       return [...prevNotes, newNote]
     })
   }
@@ -73,6 +74,29 @@ export function BrainstormingBoard(props: BrainstormingBoardProps) {
     })
   }
 
+  const clearBoard = () => {
+    setNotes([])
+    toast({
+      title: "Board cleared",
+      description: "All notes have been removed from the board.",
+    })
+  }
+
+  const saveBoard = () => {
+    const dataStr = JSON.stringify(notes, null, 2)
+    const blob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'brainstorming_board.json'
+    a.click()
+    URL.revokeObjectURL(url)
+    toast({
+      title: "Board saved",
+      description: "Your board has been saved as a JSON file.",
+    })
+  }
+
   const bringToFront = (id: string) => {
     setNotes(prevNotes => prevNotes.map(note => 
       note.id === id ? { ...note, zIndex: zCounter } : note
@@ -85,7 +109,42 @@ export function BrainstormingBoard(props: BrainstormingBoardProps) {
       ref={boardRef} 
       className="relative min-h-[600px] bg-slate-100 p-8 rounded-lg shadow-inner overflow-hidden"
     >
+      {/* Background Image */}
       <div className="absolute inset-0 bg-[url('/cork-board.jpg')] bg-cover bg-center opacity-50"></div>
+
+      {/* Toolbar */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex space-x-2 bg-white bg-opacity-80 p-2 rounded shadow-md z-10">
+        <Button
+          variant="default"
+          size="sm"
+          className="flex items-center"
+          onClick={() => addNote()}
+          aria-label="Add Note"
+        >
+          <Plus className="h-4 w-4 mr-1" /> Add Note
+        </Button>
+        <Button
+          variant="default"
+          size="sm"
+          className="flex items-center"
+          onClick={clearBoard}
+          aria-label="Clear Board"
+        >
+          <Trash className="h-4 w-4 mr-1" /> Clear Board
+        </Button>
+        <Button
+          variant="default"
+          size="sm"
+          className="flex items-center"
+          onClick={saveBoard}
+          aria-label="Save Board"
+        >
+          <Save className="h-4 w-4 mr-1" /> Save Board
+        </Button>
+        {/* Add more toolbar buttons here as needed */}
+      </div>
+
+      {/* Notes Container */}
       <div className="relative h-full">
         {notes.map((note) => (
           <motion.div
@@ -147,13 +206,17 @@ export function BrainstormingBoard(props: BrainstormingBoardProps) {
           </motion.div>
         ))}
       </div>
-      <Button
+
+      {/* Add Note Button (Optional: Remove if moving all buttons to toolbar) */}
+      {/* <Button
         className="absolute bottom-4 left-4 bg-teal-500 hover:bg-teal-600 text-white flex items-center"
         onClick={() => addNote('New Note', 'Your content here')}
         aria-label="Add Note"
       >
         <Plus className="h-4 w-4 mr-2" /> Add Note
-      </Button>
+      </Button> */}
+
+      {/* Chat Window */}
       <div className="absolute bottom-4 right-4">
         <ChatWindow addNote={addNote} />
       </div>
