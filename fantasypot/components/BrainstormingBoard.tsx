@@ -82,17 +82,15 @@ export function BrainstormingBoard(props: BrainstormingBoardProps) {
       if (!response.ok) throw new Error('Failed to organize notes');
 
       // Define the expected structure of organizedNotes
-      const { organizedNotes }: { organizedNotes: { id: string; title: string; content: string; category: string | string[] }[] } = await response.json();
+      const { organizedNotes }: { organizedNotes: { id: string; title: string; content: string; category: string[] }[] } = await response.json();
 
       // Map 'category' to 'topics' and preserve 'color'
       const updatedNotes: BrainstormingNote[] = organizedNotes.map(organizedNote => {
         const existingNote = notes.find(note => note.id === organizedNote.id);
         let topics: string[] = [];
 
-        if (Array.isArray(organizedNote.category)) {
+        if (organizedNote.category) {
           topics = organizedNote.category;
-        } else if (organizedNote.category) {
-          topics = [organizedNote.category];
         } else {
           topics = ["Uncategorized"];
         }

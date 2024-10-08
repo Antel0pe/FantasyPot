@@ -11,10 +11,8 @@ const prompt = (notes: object) => {
     Possible categories include: magic, lore, geography, character, event.
     
     In addition you are to give specific categories relevant to the plot. 
-    Example: The Breaking in which the dark lord poisons the one power and all the channelers go mad.
-    Example Output: Event, The Breaking, lore
 
-    You are to return each individual note in JSON with id, title, content, and any categories.
+    You are to return each individual note in JSON with id, title, content, and any categories. Only return notes that are included below.
     
     Input: ${notes}`
 }
@@ -35,7 +33,7 @@ const Note = z.object({
     id: z.string(),
     title: z.string(),
     content: z.string(),
-    category: z.string()
+    category: z.array(z.string())
 });
 
 // Define the structure of the response body
