@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, Minus, Maximize } from "lucide-react"; // Import additional icons
 import {
     Avatar,
     AvatarFallback,
@@ -36,13 +36,13 @@ type User = {
 };
 
 const user: User = {
-    name: "Bob",
+    name: "AI Writer",
     avatar: "/placeholder.svg?height=32&width=32",
     type: Sender.WRITER,
 };
 
 const aiAssistant: User = {
-    name: "Flob",
+    name: "AI Editor",
     avatar: "/placeholder.svg?height=32&width=32",
     type: Sender.EDITOR,
 };
@@ -50,7 +50,7 @@ const aiAssistant: User = {
 type WriterResponse = {
     response: string,
     stickyNote: [{ title: string, category: string, text: string }],
-}
+};
 
 
 type Props = {
@@ -60,6 +60,7 @@ type Props = {
 export function ChatWindow({ addNote }: Props) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
+    const [isMinimized, setIsMinimized] = useState(false); // State to track minimization
 
     // API call to Writer
     const sendToWriterAPI = async (conversation: string[]): Promise<WriterResponse> => {
@@ -79,7 +80,7 @@ export function ChatWindow({ addNote }: Props) {
 
         return {
             response: data.response,
-            stickyNote: data.stickyNote ?? ''
+            stickyNote: data.stickyNote ?? []
         };
     };
 
@@ -167,88 +168,114 @@ export function ChatWindow({ addNote }: Props) {
         // You can call a function here to send the updated conversation to the APIs
     };
 
-    return (
+    if (isMinimized) {
+        // Render only the restore button when minimized
+        return (
+            <Button
+                onClick={() => setIsMinimized(false)}
+                className="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 z-40"
+                aria-label="Restore Chat Window"
+            >
+                <Maximize className="h-6 w-6" />
+            </Button>
+        );
+    }
 
-        <Card className="fixed bottom-4 right-4 w-96 h-[500px] flex flex-col bg-black backdrop-blur-lg border-none text-slate-100">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Chat Assistant</CardTitle>
-                {/* <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                    <X className="h-4 w-4" />
-                </Button> */}
-            </CardHeader>
-            <CardContent className="flex-grow overflow-hidden">
-                <ScrollArea className="h-full pr-8">
-                    {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className={`mb-4 flex ${message.sender === Sender.WRITER
-                                    ? 'justify-end'
-                                    : 'justify-start'
-                                }`}
+    return (
+        <>
+            <Card className="fixed bottom-4 right-4 w-96 h-[500px] flex flex-col bg-black backdrop-blur-lg border-none text-slate-100 z-30">
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Chat Assistant</CardTitle>
+                    <div className="flex space-x-2">
+                        {/* Minimize Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsMinimized(true)}
+                            aria-label="Minimize Chat Window"
                         >
-                            {message.sender === Sender.EDITOR && (
-                                <Avatar className="w-8 h-8 mr-2">
-                                    <AvatarImage
-                                        src={aiAssistant.avatar}
-                                        alt={aiAssistant.name}
-                                    />
-                                    <AvatarFallback>
-                                        {aiAssistant.name[0]}
-                                    </AvatarFallback>
-                                </Avatar>
-                            )}
-                            <div className="flex flex-col">
-                                <span className="text-xs text-slate-400 mb-1">
-                                    {message.sender === Sender.WRITER
-                                        ? user.name
-                                        : aiAssistant.name}
-                                </span>
-                                <span
-                                    className={`inline-block p-2 rounded-lg ${message.sender === Sender.WRITER
-                                            ? 'bg-slate-700 text-slate-100'
-                                            : 'bg-slate-700 text-slate-100'
-                                        }`}
-                                >
-                                    {message.text}
-                                </span>
+                            <Minus className="h-4 w-4" />
+                        </Button>
+
+                    </div>
+                </CardHeader>
+                <CardContent className="flex-grow overflow-hidden">
+                    <ScrollArea className="h-full pr-8">
+                        {messages.map((message) => (
+                            <div
+                                key={message.id}
+                                className={`mb-4 flex ${message.sender === Sender.WRITER
+                                        ? 'justify-end'
+                                        : 'justify-start'
+                                    }`}
+                            >
+                                {message.sender === Sender.EDITOR && (
+                                    <Avatar className="w-8 h-8 mr-2">
+                                        <AvatarImage
+                                            src={aiAssistant.avatar}
+                                            alt={aiAssistant.name}
+                                        />
+                                        <AvatarFallback>
+                                            {aiAssistant.name[0]}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                )}
+                                <div className="flex flex-col">
+                                    <span className="text-xs text-slate-400 mb-1">
+                                        {message.sender === Sender.WRITER
+                                            ? user.name
+                                            : aiAssistant.name}
+                                    </span>
+                                    <span
+                                        className={`inline-block p-2 rounded-lg ${message.sender === Sender.WRITER
+                                                ? 'bg-slate-700 text-slate-100'
+                                                : 'bg-slate-700 text-slate-100'
+                                            }`}
+                                    >
+                                        {message.text}
+                                    </span>
+                                </div>
+                                {message.sender === Sender.WRITER && (
+                                    <Avatar className="w-8 h-8 ml-2">
+                                        <AvatarImage src={user.avatar} alt={user.name} />
+                                        <AvatarFallback>{user.name[0]}</AvatarFallback>
+                                    </Avatar>
+                                )}
                             </div>
-                            {message.sender === Sender.WRITER && (
-                                <Avatar className="w-8 h-8 ml-2">
-                                    <AvatarImage src={user.avatar} alt={user.name} />
-                                    <AvatarFallback>{user.name[0]}</AvatarFallback>
-                                </Avatar>
-                            )}
-                        </div>
-                    ))}
-                </ScrollArea>
-            </CardContent>
-             <CardFooter className="flex flex-col space-y-2">
-                {/* <Input
-                    placeholder="Type your message..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            handleSendMessage();
-                        }
-                    }}
-                    className="mb-2"
-                />
-                <div className="flex space-x-2">
-                    <Button
-                        onClick={handleSendMessage}
-                        className="bg-teal-500 hover:bg-teal-600 flex-1"
-                    >
-                        Send
-                    </Button>  */}
+                        ))}
+                    </ScrollArea>
+                </CardContent>
+                <CardFooter className="flex flex-col space-y-2">
+                    {/* Uncomment and use the input if needed */}
+                    {/* 
+                    <Input
+                        placeholder="Type your message..."
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSendMessage();
+                            }
+                        }}
+                        className="mb-2"
+                    />
+                    <div className="flex space-x-2">
+                        <Button
+                            onClick={handleSendMessage}
+                            className="bg-teal-500 hover:bg-teal-600 flex-1"
+                        >
+                            Send
+                        </Button>
+                    </div> 
+                    */}
                     <Button
                         onClick={startBrainstorm}
-                        className="bg-green-500 hover:bg-gray-600 flex-1"
+                        className="bg-green-500 hover:bg-green-600 flex-1"
                     >
                         { messages.length === 0 ? 'Start Conversation' : 'Continue' }
                     </Button>
-                {/* </div> */}
-            </CardFooter>
-        </Card>
+                </CardFooter>
+            </Card>
+        </>
     );
 }
